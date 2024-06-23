@@ -2,6 +2,7 @@ package com.example.criminal_intent
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import com.example.criminal_intent.ui.fragment.CrimeListFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
