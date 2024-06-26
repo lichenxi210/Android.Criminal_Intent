@@ -10,8 +10,14 @@ import android.widget.Button
 import android.widget.CheckBox
 import android.widget.EditText
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
 import com.example.criminal_intent.R
+import com.example.criminal_intent.dao.CrimeRepository
+import com.example.criminal_intent.database.DatabaseManager
 import com.example.criminal_intent.model.Crime
+import com.example.criminal_intent.ui.viewmodel.CrimeListViewModel
+import com.example.criminal_intent.ui.viewmodel.CrimeListViewModelFactory
+import java.util.*
 
 class CrimeFragment:Fragment() {
     private lateinit var crime: Crime
@@ -19,9 +25,24 @@ class CrimeFragment:Fragment() {
     private lateinit var dateButton: Button
     private lateinit var solvedCheckBox: CheckBox
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        crime =Crime()
+    private val crimeListViewModel: CrimeListViewModel by lazy {
+        val database = DatabaseManager.getDatabase(requireNotNull(this.activity).applicationContext)
+        val repository = CrimeRepository(database.crimeDao())
+        val factory = CrimeListViewModelFactory(repository)
+        ViewModelProvider(this, factory).get(CrimeListViewModel::class.java)
+    }
+
+    companion object {
+        private const val ARG_CRIME_ID = "crime_id"
+
+        fun newInstance(crimeId: UUID): CrimeFragment {
+            val args = Bundle()
+            args.putSerializable(ARG_CRIME_ID, crimeId)
+
+            val fragment = CrimeFragment()
+            fragment.arguments = args
+            return fragment
+        }
     }
 
     override fun onCreateView(
@@ -36,54 +57,32 @@ class CrimeFragment:Fragment() {
          dateButton = view.findViewById(R.id.crime_date) as Button
          solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
 
-        dateButton.apply {
-            text   = crime.date.toString()
-            isEnabled = false
-        }
-
         return view
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        val crimeId = arguments?.getSerializable(ARG_CRIME_ID) as UUID
+        crimeListViewModel.getCrime(crimeId)
 
-
-
-
-
-    override fun onStart() {
-        super.onStart()
-        val titleWatcher = object : TextWatcher {
-            override fun beforeTextChanged(
-                s: CharSequence?,
-                start: Int,
-                count: Int,
-                after: Int
-            ) {
-                // This space intentionally left blank
+        crimeListViewModel.crimeDetail.observe(viewLifecycleOwner, { loadedCrime ->
+            loadedCrime?.let {
+                this.crime = it
+                updateUI(it)
             }
+        })
+    }
 
-            override fun onTextChanged(
-                sequence: CharSequence?,
-                start: Int,
-                before: Int,
-                count: Int
-            ) {
-                crime.title = sequence.toString()
-            }
-
-            override fun afterTextChanged(editable: Editable?) {
-                // 文本改变后执行的操作
-            }
-
+    private fun updateUI(crime: Crime) {
+        // 用 crime 对象更新界面
+        titleField.setText(crime.title)
+        dateButton.text = crime.date.toString()
+        dateButton.apply {
+            text = crime.date.toString()
+            isEnabled = false
         }
+        solvedCheckBox.isChecked = crime.isSolved
+    }
 
-            titleField.addTextChangedListener(titleWatcher)
-            solvedCheckBox.apply {
-                setOnCheckedChangeListener{_, isChecked ->
-
-                    crime.isSolved = isChecked
-                }
-            }
-
-        }
 }
 

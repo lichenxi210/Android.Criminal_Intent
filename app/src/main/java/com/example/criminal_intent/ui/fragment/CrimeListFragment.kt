@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.criminal_intent.ui.viewmodel.CrimeListViewModel
 import com.example.criminal_intent.R
 import com.example.criminal_intent.dao.CrimeRepository
-import com.example.criminal_intent.database.CrimeDB
 import com.example.criminal_intent.database.DatabaseManager
 import com.example.criminal_intent.model.Crime
 import com.example.criminal_intent.ui.adapter.CrimeAdapter
@@ -25,7 +24,7 @@ class CrimeListFragment: Fragment() {
 
     private lateinit var crimeRecyclerView: RecyclerView
     private lateinit var searchCrime: EditText
-    private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
+    private var adapter: CrimeAdapter? = null
 
     private val crimeListViewModel: CrimeListViewModel by lazy {
         val database = DatabaseManager.getDatabase(requireNotNull(this.activity).applicationContext)
@@ -55,7 +54,7 @@ class CrimeListFragment: Fragment() {
             }
             override fun afterTextChanged(s: Editable?) {}
         })
-        //updateUI()
+
         return view
     }
 
@@ -71,11 +70,13 @@ class CrimeListFragment: Fragment() {
     }
 
     private fun updateUI(crimes: List<Crime>) {
-        adapter = CrimeAdapter(crimes)
+        adapter = CrimeAdapter(crimes) { crime ->
+            // 这里是点击事件的处理逻辑
+            val transaction = requireActivity().supportFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragment_container, CrimeFragment.newInstance(crime.id))
+            transaction.addToBackStack(null)
+            transaction.commit()
+        }
         crimeRecyclerView.adapter = adapter
     }
-
-
-
-
 }

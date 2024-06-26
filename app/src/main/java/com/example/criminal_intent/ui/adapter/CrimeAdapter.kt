@@ -12,7 +12,7 @@ import com.example.criminal_intent.R
 import com.example.criminal_intent.model.Crime
 import java.util.*
 
-class CrimeAdapter(private var crimes: List<Crime>) : RecyclerView.Adapter<CrimeAdapter.CrimeHolder>(), Filterable {
+class CrimeAdapter(private var crimes: List<Crime>, private val onCrimeClicked: (Crime) -> Unit) : RecyclerView.Adapter<CrimeAdapter.CrimeHolder>(), Filterable {
 
     private var crimeListFull: List<Crime> = ArrayList(crimes)
     init {
@@ -34,6 +34,11 @@ class CrimeAdapter(private var crimes: List<Crime>) : RecyclerView.Adapter<Crime
         val crime = crimes[position]
         holder.titleTextView.text = crime.title
         holder.dateTextView.text = crime.date.toString()
+
+        // 设置点击监听器
+        holder.itemView.setOnClickListener {
+            onCrimeClicked(crime)
+        }
     }
 
     override fun getItemCount(): Int {

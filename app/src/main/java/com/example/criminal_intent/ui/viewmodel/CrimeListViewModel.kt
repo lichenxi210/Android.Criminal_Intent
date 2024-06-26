@@ -46,6 +46,7 @@ class CrimeListViewModel(private val repository: CrimeRepository) : ViewModel() 
 
         viewModelScope.launch {
             initialCrimes.forEach { repository.addCrime(it) }
+            loadCrimes()
         }
     }
 
